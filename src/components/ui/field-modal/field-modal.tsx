@@ -1,8 +1,9 @@
 import React, { FC, useCallback } from 'react'
 
 import { Button, ButtonGroup, FormLayout, InputGroup, InputWrap } from '@reapit/elements'
-import { AddedFieldType } from '../../pages/home-page'
+
 import { useForm } from 'react-hook-form'
+import { AddedFieldType } from '../home-page/form-builder'
 
 const setDefaultFieldValue = (value: AddedFieldType) => ({
   name: value.options.name,

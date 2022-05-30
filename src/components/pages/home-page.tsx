@@ -1,134 +1,96 @@
-import React, { FC, useCallback, useState } from 'react'
-import { Title, PageContainer, FlexContainer, BodyText, useModal } from '@reapit/elements'
-import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
-import DroppableBox from '../ui/droppable/box/box'
-import TextField, { TextFieldProps } from '../ui/draggable/text-field/text-field'
-import { ActionsTypeProps } from '../ui/draggable'
-import Actions from '../ui/draggable/actions/actions'
-import { FieldContext } from '../../context/field-context'
-import FieldModalContent from '../ui/field-modal/field-modal'
+import React, { FC, Suspense, useCallback, useRef, useState } from 'react'
 
-export type AddedFieldType = {
-  id: string
-  options: {
-    name: string
-    fieldType: ActionsTypeProps['fieldType'] & TextFieldProps['fieldType']
-    type: ActionsTypeProps['id'] & TextFieldProps['id']
-    icon: JSX.Element
-    category: ActionsTypeProps['category'] & TextFieldProps['category']
-  }
-}
+import {
+  PageContainer,
+  MainContainer,
+  SecondaryNavContainer,
+  SecondaryNav,
+  SecondaryNavItem,
+  Button,
+  Icon,
+  Title,
+  SmallText,
+  Subtitle,
+  useModal,
+} from '@reapit/elements'
+
+import FormBuilder, { ForwardRefFormBuilderProps } from '../ui/home-page/form-builder'
+import FormModalContent from '../ui/form-modal/form-modal'
+import { Route, useHistory } from 'react-router'
+
+// TODO: create preview page that can simulate the form (with params of id)
+// TODO: create dashboard page that can see list of created custom form
 
 export const HomePage: FC = () => {
-  const [addedField, setAddedField] = useState<AddedFieldType[]>([]) //TODO: convert to multi dimension array
+  const [activeNavItemIndex, setActiveNavItemIndex] =
+    useState<keyof ReturnType<typeof availableSubPages>>('form-builder')
 
-  // selected field that appear inside edit mode (modal)
-  const [currentField, setCurrentField] = useState<AddedFieldType | null>(null)
+  const ref = useRef<ForwardRefFormBuilderProps>(null)
 
-  // modal
-  const { Modal: FieldModal, openModal: openFieldModal } = useModal('modal-root')
+  const history = useHistory()
 
-  // TODO:
-  // make setter fn for current field
-  // then edit the current field in addedField
-  const onFieldModalSubmit = useCallback(
-    (curr: AddedFieldType) => {
-      const filter = addedField.findIndex((v) => v.id === curr.id)
-      setCurrentField((prev) => {
-        prev[filter] = curr
-        return prev
-      })
-      // setAddedField((prev) => [...prev, ...filter])
-      // console.log(filter)
-      // console.log('here', id)
-    },
-    [addedField],
-  )
+  const { Modal: FormModal, openModal: openFormModal, closeModal: closeFormModal } = useModal('modal-root')
+
+  const availableSubPages = () =>
+    ({
+      dashboard: () => {
+        console.log('asd', this)
+        history.push('/dashboard')
+        setActiveNavItemIndex('dashboard')
+      },
+      'form-builder': () => {
+        history.push('/form-builder')
+        setActiveNavItemIndex('form-builder')
+      },
+    } as const)
+
+  const renderSidebarButtons = useCallback(() => {
+    if (activeNavItemIndex === 'form-builder') {
+      return (
+        <Button fixedWidth intent="primary" onClick={openFormModal}>
+          Generate Form
+        </Button>
+      )
+    }
+  }, [activeNavItemIndex])
 
   return (
-    <PageContainer>
-      <FieldContext.Provider value={{ openFieldModal, setCurrentFieldState: setCurrentField, currentField }}>
-        <Title>Form Builder</Title>
-        <DndProvider backend={HTML5Backend}>
-          <FlexContainer isFlexJustifyBetween>
-            <div style={{ width: '-webkit-fill-available' }}>
-              <DroppableBox addedField={addedField} setAddedField={setAddedField} />
-            </div>
-            <div style={{ minWidth: '400px' }}>
-              <div>
-                <BodyText>Fields</BodyText>
-                {FIELDS.map((field) => (
-                  <TextField key={field.id} {...field} />
-                ))}
-              </div>
-              <div className="el-mt8">
-                <BodyText>Buttons</BodyText>
-                {ACTIONS.map((field) => (
-                  <Actions key={field.id} {...field} />
-                ))}
-              </div>
-              <div className="el-mt8">
-                <BodyText>Layout</BodyText>
-              </div>
-            </div>
-          </FlexContainer>
-          <FieldModal>
-            <FieldModalContent {...currentField!} onSubmitForm={onFieldModalSubmit} />
-          </FieldModal>
-        </DndProvider>
-      </FieldContext.Provider>
-    </PageContainer>
+    <MainContainer>
+      <SecondaryNavContainer>
+        <Title hasBoldText>Form Builder</Title>
+        <SecondaryNav className="el-mt6 el-mb6">
+          <SecondaryNavItem active={activeNavItemIndex === 'dashboard'} onClick={availableSubPages()['dashboard']}>
+            Dashboard
+          </SecondaryNavItem>
+          <SecondaryNavItem
+            active={activeNavItemIndex === 'form-builder'}
+            onClick={availableSubPages()['form-builder']}
+          >
+            Form Builder
+          </SecondaryNavItem>
+        </SecondaryNav>
+        <Icon icon="editAppInfographic" iconSize="large" className="el-mb3" />
+        <Subtitle>About Form Builder</Subtitle>
+        <SmallText hasGreyText>
+          Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
+          industry&apos;s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and
+          scrambled it to make a type specimen book
+        </SmallText>
+        {renderSidebarButtons()}
+      </SecondaryNavContainer>
+      <PageContainer>
+        <Suspense fallback={<>yioio</>}>
+          <Route path="/dashboard" render={() => <>this is the dashboard</>} exact />
+          <Route path="/form-builder" render={() => <FormBuilder ref={ref} />} exact />
+        </Suspense>
+      </PageContainer>
+      <FormModal>
+        {ref.current !== null && (
+          <FormModalContent addedField={ref.current.addedFieldState} closeFormModal={closeFormModal} />
+        )}
+      </FormModal>
+    </MainContainer>
   )
 }
 
 export default HomePage
-
-// TODO: Long term, move to specific
-const FIELDS: TextFieldProps[] = [
-  {
-    id: 'short-field',
-    name: 'Short field',
-    fieldType: 'text',
-    category: 'field',
-  },
-  {
-    id: 'long-field',
-    name: 'Long Field',
-    fieldType: 'text',
-    category: 'field',
-  },
-  {
-    id: 'number-field',
-    name: 'Number Field',
-    fieldType: 'number',
-    category: 'field',
-  },
-  {
-    id: 'checkbox-field',
-    name: 'Checkbox Field',
-    fieldType: 'checkbox',
-    category: 'field',
-  },
-  {
-    id: 'date-field',
-    name: 'Date Field',
-    fieldType: 'date',
-    category: 'field',
-  },
-  {
-    id: 'time-field',
-    name: 'Time Field',
-    fieldType: 'time',
-    category: 'field',
-  },
-]
-
-const ACTIONS: ActionsTypeProps[] = [
-  {
-    id: 'submit-action',
-    name: 'Submit Button',
-    fieldType: 'button',
-    category: 'action',
-  },
-]

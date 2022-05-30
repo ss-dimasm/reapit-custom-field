@@ -4,15 +4,16 @@ import { generateRandomId } from '../../../../utils/generate'
 import DroppedFields from '../fields/dropped-fields'
 import { ACCEPT_TYPE } from '..'
 import fieldIcon from '../../draggable/icons'
-import { AddedFieldType } from '../../../pages/home-page'
+import { AddedFieldType } from '../../home-page/form-builder'
 
 const style: CSSProperties = {
-  height: '80vh',
+  height: '93vh',
   padding: '1rem',
   width: '95%',
   color: 'black',
   border: '1px solid red',
   position: 'relative',
+  overflowY: 'auto',
 }
 
 type DroppableBoxProps = {
@@ -24,7 +25,6 @@ const DroppableBox: FC<DroppableBoxProps> = ({ addedField, setAddedField }) => {
   const [, drop] = useDrop(() => ({
     accept: ACCEPT_TYPE,
     drop: (item: AddedFieldType) => {
-      // set new object
       const itemResult: AddedFieldType = {
         ...item,
         id: generateRandomId({ text: item.id, length: 8 }, '-'),
@@ -41,8 +41,8 @@ const DroppableBox: FC<DroppableBoxProps> = ({ addedField, setAddedField }) => {
 
   return (
     <div ref={drop} style={{ ...style }}>
-      {addedField.map((field) => (
-        <DroppedFields key={field.id} {...field} />
+      {addedField.map((field, i) => (
+        <DroppedFields key={field.id} {...field} index={i} />
       ))}
     </div>
   )
