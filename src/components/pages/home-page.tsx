@@ -15,34 +15,45 @@ import {
 } from '@reapit/elements'
 
 import FormBuilder, { ForwardRefFormBuilderProps } from '../ui/home-page/form-builder'
-import FormModalContent from '../ui/form-modal/form-modal'
-import { Route, useHistory } from 'react-router'
+import FormModalContent, { SavedFormTypeOnLocalStorage } from '../ui/form-modal/form-modal'
+import { Route, useHistory, useLocation } from 'react-router'
+import { Routes } from '../../constants/routes'
+import Dashboard from '../ui/home-page/dashboard'
+import DashboardFormContent from '../ui/form-modal/dashboard-form-content'
 
 // TODO: create preview page that can simulate the form (with params of id)
 // TODO: create dashboard page that can see list of created custom form
 
-export const HomePage: FC = () => {
-  const [activeNavItemIndex, setActiveNavItemIndex] =
-    useState<keyof ReturnType<typeof availableSubPages>>('form-builder')
+type AvailablePageType = 'dashboard' | 'form-builder'
 
-  const ref = useRef<ForwardRefFormBuilderProps>(null)
+export const HomePage: FC = () => {
+  const currentLocation = useLocation()
+
+  const current = currentLocation.pathname === '/' ? 'dashboard' : 'form-builder'
+
+  const [activeNavItemIndex, setActiveNavItemIndex] = useState<AvailablePageType>(current)
+  const [selectedForm, setSelectedForm] = useState<SavedFormTypeOnLocalStorage | null>(null)
 
   const history = useHistory()
 
+  const formBuilderRef = useRef<ForwardRefFormBuilderProps>(null)
+
   const { Modal: FormModal, openModal: openFormModal, closeModal: closeFormModal } = useModal('modal-root')
 
-  const availableSubPages = () =>
-    ({
-      dashboard: () => {
-        console.log('asd', this)
-        history.push('/dashboard')
-        setActiveNavItemIndex('dashboard')
-      },
-      'form-builder': () => {
-        history.push('/form-builder')
-        setActiveNavItemIndex('form-builder')
-      },
-    } as const)
+  const availableSubPages = useCallback(
+    (page: AvailablePageType) =>
+      ({
+        dashboard: () => {
+          history.push(Routes.HOME)
+          setActiveNavItemIndex('dashboard')
+        },
+        'form-builder': () => {
+          history.push(Routes.FORM_BUILDER)
+          setActiveNavItemIndex('form-builder')
+        },
+      }[page]),
+    [],
+  )
 
   const renderSidebarButtons = useCallback(() => {
     if (activeNavItemIndex === 'form-builder') {
@@ -54,18 +65,23 @@ export const HomePage: FC = () => {
     }
   }, [activeNavItemIndex])
 
+  const renderFormModalContent = useCallback(() => {
+    if (currentLocation.pathname === Routes.HOME && selectedForm !== null) {
+      return <DashboardFormContent selectedForm={selectedForm} closeFormModal={closeFormModal} />
+    } else if (currentLocation.pathname === Routes.FORM_BUILDER && formBuilderRef.current !== null) {
+      return <FormModalContent formBuilderRef={formBuilderRef.current} closeFormModal={closeFormModal} />
+    }
+  }, [selectedForm, currentLocation.pathname])
+
   return (
     <MainContainer>
       <SecondaryNavContainer>
         <Title hasBoldText>Form Builder</Title>
         <SecondaryNav className="el-mt6 el-mb6">
-          <SecondaryNavItem active={activeNavItemIndex === 'dashboard'} onClick={availableSubPages()['dashboard']}>
+          <SecondaryNavItem active={activeNavItemIndex === 'dashboard'} onClick={availableSubPages('dashboard')}>
             Dashboard
           </SecondaryNavItem>
-          <SecondaryNavItem
-            active={activeNavItemIndex === 'form-builder'}
-            onClick={availableSubPages()['form-builder']}
-          >
+          <SecondaryNavItem active={activeNavItemIndex === 'form-builder'} onClick={availableSubPages('form-builder')}>
             Form Builder
           </SecondaryNavItem>
         </SecondaryNav>
@@ -80,15 +96,15 @@ export const HomePage: FC = () => {
       </SecondaryNavContainer>
       <PageContainer>
         <Suspense fallback={<>yioio</>}>
-          <Route path="/dashboard" render={() => <>this is the dashboard</>} exact />
-          <Route path="/form-builder" render={() => <FormBuilder ref={ref} />} exact />
+          <Route
+            path={Routes.HOME}
+            render={() => <Dashboard openFormModal={openFormModal} setSelectedForm={setSelectedForm} />}
+            exact
+          />
+          <Route path={Routes.FORM_BUILDER} render={() => <FormBuilder ref={formBuilderRef} />} exact />
         </Suspense>
       </PageContainer>
-      <FormModal>
-        {ref.current !== null && (
-          <FormModalContent addedField={ref.current.addedFieldState} closeFormModal={closeFormModal} />
-        )}
-      </FormModal>
+      <FormModal title="">{renderFormModalContent()}</FormModal>
     </MainContainer>
   )
 }

@@ -61,7 +61,6 @@ const FormBuilder = forwardRef<ForwardRefFormBuilderProps, FormBuilderProps>((_,
     addedFieldState,
   }))
 
-  console.log(addedFieldState)
   return (
     <div>
       <FieldContext.Provider
