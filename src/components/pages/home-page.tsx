@@ -20,16 +20,21 @@ import { Route, useHistory, useLocation } from 'react-router'
 import { Routes } from '../../constants/routes'
 import Dashboard from '../ui/home-page/dashboard'
 import DashboardFormContent from '../ui/form-modal/dashboard-form-content'
+import FormPreview from '../ui/home-page/form-preview'
 
 // TODO: create preview page that can simulate the form (with params of id)
 // TODO: create dashboard page that can see list of created custom form
 
-type AvailablePageType = 'dashboard' | 'form-builder'
+type AvailablePageType = 'dashboard' | 'form-builder' | 'preview'
 
 export const HomePage: FC = () => {
   const currentLocation = useLocation()
 
-  const current = currentLocation.pathname === '/' ? 'dashboard' : 'form-builder'
+  const current = currentLocation.pathname.includes(Routes.FORM_BUILDER)
+    ? 'form-builder'
+    : currentLocation.pathname.includes(Routes.FORM_PREVIEW)
+    ? 'preview'
+    : 'dashboard'
 
   const [activeNavItemIndex, setActiveNavItemIndex] = useState<AvailablePageType>(current)
   const [selectedForm, setSelectedForm] = useState<SavedFormTypeOnLocalStorage | null>(null)
@@ -102,6 +107,7 @@ export const HomePage: FC = () => {
             exact
           />
           <Route path={Routes.FORM_BUILDER} render={() => <FormBuilder ref={formBuilderRef} />} exact />
+          <Route path={Routes.FORM_PREVIEW} render={() => <FormPreview />} exact />
         </Suspense>
       </PageContainer>
       <FormModal title="">{renderFormModalContent()}</FormModal>

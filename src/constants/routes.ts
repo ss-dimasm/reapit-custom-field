@@ -6,4 +6,5 @@ export const Routes = {
   DATA: '/data',
   LOGIN: '/login',
   FORM_BUILDER: '/form-builder',
+  FORM_PREVIEW: '/form-preview/:id',
 }

@@ -40,6 +40,7 @@ const Router = () => (
           <Switch>
             <Route path={Routes.HOME} exact component={HomePage} />
             <Route path={Routes.FORM_BUILDER} exact component={HomePage} />
+            <Route path={Routes.FORM_PREVIEW} exact component={HomePage} />
           </Switch>
         </PrivateRouteWrapper>
         <Redirect to={Routes.LOGIN} />

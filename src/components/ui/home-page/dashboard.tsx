@@ -5,6 +5,8 @@ import { useLocalStorage } from 'react-use'
 
 import { Card, Col, Grid, Loader } from '@reapit/elements'
 import { SavedFormTypeOnLocalStorage } from '../form-modal/form-modal'
+import { useHistory } from 'react-router'
+import { Routes } from '../../../constants/routes'
 
 type DashboardProps = {
   openFormModal: () => void
@@ -13,6 +15,8 @@ type DashboardProps = {
 
 const Dashboard: FC<DashboardProps> = ({ openFormModal, setSelectedForm }) => {
   const [localStorageVal] = useLocalStorage<SavedFormTypeOnLocalStorage[]>('my-custom-form', [])
+
+  const history = useHistory()
 
   const setSelectedFormValue = useCallback((curr: SavedFormTypeOnLocalStorage) => {
     openFormModal()
@@ -35,7 +39,7 @@ const Dashboard: FC<DashboardProps> = ({ openFormModal, setSelectedForm }) => {
             mainContextMenuItems={[
               {
                 icon: 'previewSystem',
-                onClick: () => console.log('Throw to preview form'),
+                onClick: () => history.push(`${Routes.FORM_PREVIEW.slice(0, -3)}${form.id}`),
               },
               {
                 icon: 'editSystem',
